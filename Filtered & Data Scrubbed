@@ -10,7 +10,8 @@ library(readxl)
 library(dplyr)
 ```
 
-First get the url for the file you want, and download it, ideally to a folder.In this case, a 'downloads2' folder was created. I got the URL from the www.dhs.gov website and noted that it was a zip file. 
+First get the url for the file you want, and download it, ideally to a folder.  In this case, a 'downloads2' folder was created.
+I got the URL from the www.dhs.gov website and noted that it was a zip file. 
 
 ```{r}
 download.file("https://www.dhs.gov/sites/default/files/publications/LPR2006_0.zip",
