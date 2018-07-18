@@ -1,0 +1,89 @@
+---
+title: "DHS Immigration Statistics"
+output: html_document
+---
+
+Loading necessary libraries below:
+
+```{r}
+library(readxl)
+library(dplyr)
+```
+
+First get the url for the file you want, and download it, ideally to a folder.In this case, a 'downloads2' folder was created. I got the URL from the www.dhs.gov website and noted that it was a zip file. 
+
+```{r}
+download.file("https://www.dhs.gov/sites/default/files/publications/LPR2006_0.zip",
+             destfile = "downloads/lpr2006.zip")
+download.file("https://www.dhs.gov/sites/default/files/publications/YRBK%202016%20LPR%20Excel%20Final_0.zip",
+             destfile = "downloads/lpr2016.zip")
+```
+
+
+Get a list of the files in the zip, which allows you to see the file name to insert below in the unzip command.
+
+```{r}
+unzip("downloads/lpr2006.zip", list = TRUE)
+unzip("downloads/lpr2016.zip", list = TRUE)
+```
+
+Unzipped Table 6 for both datasets.  First dataset is from 1997 to 2006; Second dataset is from 2007 to 2016.
+
+```{r}
+unzip("downloads/lpr2006.zip", exdir = "downloads/unzipped", files = "Table 06D.xls")
+unzip("downloads/lpr2016.zip", exdir = "downloads/unzipped", files = "YRBK 2016 LPR Excel Final/fy2016_table6.xls")
+
+```
+
+So now table6 is at "downloads2/unzipped/Table 06D.xls" and downloads2/unzipped/YRBK 2016 LPR Excel Final/fy2016_table6.xls. Created two variables for both unzipped files, path1 and path2.
+
+```{r}
+
+path1 <- "~/downloads/unzipped/Table 06D.xls"
+path2 <- "~/downloads/unzipped/YRBK 2016 LPR Excel Final/fy2016_table6.xls"
+
+```
+
+First, I'm reading in the excel file(.xls) that contains files from 1997 to 2006 using the variable name, path1. Then, read in the 2nd, excel file containing records from 2007 to 2016.
+
+Skipped the first. three rows and converted all "D" strings to 'NA'
+
+Tip: Reading the help file for readxl (?read_excel)
+
+```{r}
+tableSix_1997to2006 <- read_excel(path1, na ="D", skip = 3)
+tableSix_2007to2016 <- read_excel(path2, na ="D", skip = 3)
+
+```
+
+Merging two data tables together; 1st dataset is from 1997 to 2006 and 2nd dataset is from 2007 to 2016; however, still have multiple duplicate rows even though I have 'no.dups=TRUE' below.
+
+
+```{r}
+myfulldata_1 <- merge(x = tableSix_1997to2006 , y = tableSix_2007to2016, sort = F, no.dups = T)
+
+```
+
+Last step eliminated all duplicate rows from dataset one, 1997 to 2006 by creating the 'filtered_df' and then, deleted the duplicate rows from the 2nd dataset, 2007 to 2016 by creating 'filtered_df2'.
+
+```{r}
+filtered_df <- myfulldata_1[!duplicated(myfulldata_1$`1997`),]
+filtered_df2 <- filtered_df[!duplicated(filtered_df$`2007`) ,]
+
+```
+
+Using lapply function to change all -'s dashes in the dataset to 0s (only years 2007-2016 for the "Asylees" row had dashes)
+
+```{r}
+
+filtered_df2[2:21] <- lapply(filtered_df2[2:21], function(col) as.character( gsub("-$|\\,", "0", col) ) )
+
+```
+
+Using lapply function to change the class for all the years from "character" to "numeric" , 2:21 representing column 2 through 21.
+
+```{r}
+ix <- 2:21
+filtered_df2[ix] <- lapply(filtered_df2[ix], as.numeric)
+
+```
